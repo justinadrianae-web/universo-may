@@ -14,180 +14,25 @@
         #ui h1 { margin: 0; font-size: 2.2em; letter-spacing: 2px; }
         #ui p { margin: 10px 0 0 0; color: #D8BFD8; font-size: 1.1em; }
 
+        /* Buscador de Coordenadas (NUEVO) */
+        #search-container {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 0, 35, 0.8); border: 2px solid #DDA0DD; border-radius: 30px;
+            padding: 10px 20px; display: flex; gap: 10px; z-index: 10; backdrop-filter: blur(5px);
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.3);
+        }
+        #coord-input {
+            background: transparent; border: none; color: white; font-size: 1em; outline: none;
+            text-align: center; width: 180px; font-family: monospace;
+        }
+        #coord-input::placeholder { color: #D8BFD8; opacity: 0.7; }
+        #search-btn {
+            background: #9B59B6; border: none; color: white; padding: 8px 20px;
+            border-radius: 20px; cursor: pointer; font-weight: bold; transition: 0.3s;
+        }
+        #search-btn:hover { background: #E0B0FF; color: #30004a; box-shadow: 0 0 10px #E0B0FF; }
+
         /* La ventana gigante emergente (Modal) */
         #modal {
             display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(15, 0, 35, 0.95); border: 3px solid #DDA0DD; border-radius: 25px;
-            padding: 40px; text-align: center; color: white; box-shadow: 0 0 60px #FF00FF, inset 0 0 20px #9B59B6;
-            width: 85%; max-width: 550px; z-index: 100; backdrop-filter: blur(10px);
-        }
-        #modal h2 { margin: 0 0 20px 0; font-size: 2.5em; color: #E0B0FF; text-shadow: 0 0 15px #DDA0DD; font-weight: bold;}
-        #modal p { font-size: 1.7em; line-height: 1.6; font-style: italic; color: #F0F0F0; }
-        #close-btn {
-            background: linear-gradient(45deg, #9B59B6, #E0B0FF); border: none; color: white; padding: 15px 40px; 
-            font-size: 1.3em; border-radius: 50px; cursor: pointer; margin-top: 30px; font-weight: bold;
-            box-shadow: 0 5px 25px rgba(155, 89, 182, 0.6); transition: 0.3s;
-        }
-        #close-btn:hover { transform: scale(1.05); box-shadow: 0 5px 35px rgba(224, 176, 255, 0.8); }
-    </style>
-</head>
-<body>
-
-    <div id="ui">
-        <h1>✨ El Universo de May ✨</h1>
-        <p>Toca la pantalla para activar el sonido 🎵<br>Explora y toca los cientos de estrellas blancas 👆</p>
-    </div>
-
-    <audio id="bg-music" loop hidden>
-        <source src="https://cdn.pixabay.com/download/audio/2023/03/26/audio_874498599d.mp3?filename=forgotten-world-143663.mp3" type="audio/mpeg">
-    </audio>
-
-    <div id="modal">
-        <h2 id="modal-title">Título</h2>
-        <p id="modal-text">Mensaje</p>
-        <button id="close-btn" onclick="document.getElementById('modal').style.display='none'">Cerrar</button>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    
-    <script>
-        // --- ACTIVAR MÚSICA AL PRIMER TOQUE ---
-        window.addEventListener('click', function() {
-            const audio = document.getElementById('bg-music');
-            if (audio.paused) {
-                audio.volume = 0.4; // Volumen suave
-                audio.play().catch(e => console.log("Esperando interacción para audio..."));
-            }
-        }, { once: true }); // Solo se ejecuta una vez
-
-        const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x030008, 0.0015);
-
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
-        camera.position.z = 180;
-
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        document.body.appendChild(renderer.domElement);
-
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-        controls.autoRotate = true;
-        controls.autoRotateSpeed = 0.2;
-
-        // 1. Crear el polvo estelar de fondo (Galaxia Morada)
-        const particlesGeometry = new THREE.BufferGeometry();
-        const particlesCount = 12000; // ¡Más denso!
-        const posArray = new Float32Array(particlesCount * 3);
-        const colorsArray = new Float32Array(particlesCount * 3);
-
-        for(let i = 0; i < particlesCount * 3; i+=3) {
-            const r = 350 * Math.cbrt(Math.random());
-            const theta = Math.random() * 2 * Math.PI;
-            const phi = Math.acos(2 * Math.random() - 1);
-            
-            posArray[i] = r * Math.sin(phi) * Math.cos(theta);
-            posArray[i+1] = r * Math.sin(phi) * Math.sin(theta);
-            posArray[i+2] = r * Math.cos(phi) * 0.6; // Aplanarlo un poco
-
-            // Paleta de colores morados y rosados
-            colorsArray[i] = 0.4 + Math.random() * 0.6; // R
-            colorsArray[i+1] = Math.random() * 0.3; // G
-            colorsArray[i+2] = 0.6 + Math.random() * 0.4; // B
-        }
-        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-        particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colorsArray, 3));
-
-        const particlesMaterial = new THREE.PointsMaterial({ size: 1.2, vertexColors: true, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending });
-        const particleMesh = new THREE.Points(particlesGeometry, particlesMaterial);
-        scene.add(particleMesh);
-
-        // 2. Crear las Estrellas Tocables (Recuerdos Principales + Relleno)
-        const clickableObjects = [];
-        const starGeometry = new THREE.SphereGeometry(2.5, 16, 16);
-        const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-        const haloGeom = new THREE.SphereGeometry(5.5, 16, 16);
-        const haloMat = new THREE.MeshBasicMaterial({ color: 0xE0B0FF, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending });
-
-        // A. Recuerdos Principales (Los importantes)
-        const mainMemories = [
-            { title: "💜 15-01-25 💜", text: "El Big Bang de nuestro universo. Donde todo comenzó." },
-            { title: "💌 Lara Jean", text: "«Dicen que si miras algo con suficiente atención, desaparece. Pero yo te miro y te vuelves más real.»" },
-            { title: "🌧️ Diario de una Pasión", text: "«El mejor tipo de amor es el que despierta el alma y nos hace aspirar a más.»" },
-            { title: "👣 A Dos Metros de Ti", text: "«Te amo tanto que solo quiero que estés a salvo, incluso si eso significa no estar cerca de ti.»" },
-            { title: "✨ Mi Favorita", text: "En este y en todos los universos, te elegiría a ti siempre." },
-             { title: "🎶 Nuestra Canción", text: "Imagina que suena nuestra canción favorita mientras miras esto." }
-        ];
-
-        function addStar(title, text, isMain) {
-            const star = new THREE.Mesh(starGeometry, starMaterial);
-            // Dispersión más amplia
-            const spread = isMain ? 120 : 250;
-            star.position.set((Math.random() - 0.5) * spread, (Math.random() - 0.5) * spread, (Math.random() - 0.5) * spread);
-            star.userData = { title: title, text: text };
-            scene.add(star);
-            clickableObjects.push(star);
-            
-            const halo = new THREE.Mesh(haloGeom, haloMat);
-            if (isMain) halo.scale.set(1.5, 1.5, 1.5); // Halos más grandes para los principales
-            star.add(halo);
-        }
-
-        // Añadir principales
-        mainMemories.forEach(mem => addStar(mem.title, mem.text, true));
-
-        // B. Añadir 200+ Estrellas de Relleno
-        const fillerTexts = [
-            "✨ Polvo de estrellas", "💜 Un pequeño te quiero", "💫 Destello de luz", 
-            "🌌 Materia oscura (y hermosa)", "💖 Pensando en ti", "🚀 Viaje espacial",
-            "🌠 Pide un deseo", "✨ Eres magia", "🪐 Orbítame", "💜 Mi universo"
-        ];
-
-        for(let i = 0; i < 220; i++) {
-            const randomText = fillerTexts[Math.floor(Math.random() * fillerTexts.length)];
-            addStar("✨", randomText, false);
-        }
-
-        // 3. Sistema de clicks
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
-
-        function checkIntersection(clientX, clientY) {
-            mouse.x = (clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(clientY / window.innerHeight) * 2 + 1;
-            raycaster.setFromCamera(mouse, camera);
-
-            const intersects = raycaster.intersectObjects(clickableObjects);
-            if (intersects.length > 0) {
-                // Detener rotación automática al interactuar
-                controls.autoRotate = false;
-                const data = intersects[0].object.userData;
-                document.getElementById('modal-title').innerHTML = data.title;
-                document.getElementById('modal-text').innerHTML = data.text;
-                document.getElementById('modal').style.display = 'block';
-            }
-        }
-
-        window.addEventListener('click', (e) => checkIntersection(e.clientX, e.clientY));
-        window.addEventListener('touchstart', (e) => checkIntersection(e.touches[0].clientX, e.touches[0].clientY));
-
-        // 4. Animación
-        function animate() {
-            requestAnimationFrame(animate);
-            particleMesh.rotation.y += 0.0005; 
-            controls.update();
-            renderer.render(scene, camera);
-        }
-        animate();
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-    </script>
-</body>
-</html>
+            background:
