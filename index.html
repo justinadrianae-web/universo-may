@@ -4,17 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>El Universo de May 💜</title>
+    
+    <script>
+        window.onerror = function(msg, url, line) {
+            alert("Ocurrió un error en la línea " + line + ":\n" + msg);
+        };
+    </script>
+
     <style>
         body { margin: 0; overflow: hidden; background-color: #030008; font-family: 'Helvetica', sans-serif; }
         canvas { display: block; cursor: grab; }
         canvas:active { cursor: grabbing; }
         
-        /* Textos superiores */
         #ui { position: absolute; top: 15px; width: 100%; text-align: center; color: #E0B0FF; text-shadow: 0 0 15px #9B59B6; pointer-events: none; z-index: 5; }
         #ui h1 { margin: 0; font-size: 2.2em; letter-spacing: 2px; }
         #ui p { margin: 10px 0 0 0; color: #D8BFD8; font-size: 1.1em; }
 
-        /* Buscador de Coordenadas (NUEVO) */
         #search-container {
             position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
             background: rgba(15, 0, 35, 0.8); border: 2px solid #DDA0DD; border-radius: 30px;
@@ -32,7 +37,198 @@
         }
         #search-btn:hover { background: #E0B0FF; color: #30004a; box-shadow: 0 0 10px #E0B0FF; }
 
-        /* La ventana gigante emergente (Modal) */
         #modal {
             display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background:
+            background: rgba(15, 0, 35, 0.95); border: 3px solid #DDA0DD; border-radius: 25px;
+            padding: 40px; text-align: center; color: white; box-shadow: 0 0 60px #FF00FF, inset 0 0 20px #9B59B6;
+            width: 85%; max-width: 550px; z-index: 100; backdrop-filter: blur(10px);
+        }
+        #modal h2 { margin: 0 0 20px 0; font-size: 2.5em; color: #E0B0FF; text-shadow: 0 0 15px #DDA0DD; font-weight: bold;}
+        #modal p { font-size: 1.7em; line-height: 1.6; font-style: italic; color: #F0F0F0; }
+        #modal-coord { display: block; margin-top: 20px; font-size: 1em; color: #9B59B6; font-family: monospace; }
+        #close-btn {
+            background: linear-gradient(45deg, #9B59B6, #E0B0FF); border: none; color: white; padding: 15px 40px; 
+            font-size: 1.3em; border-radius: 50px; cursor: pointer; margin-top: 20px; font-weight: bold;
+            box-shadow: 0 5px 25px rgba(155, 89, 182, 0.6); transition: 0.3s;
+        }
+        #close-btn:hover { transform: scale(1.05); box-shadow: 0 5px 35px rgba(224, 176, 255, 0.8); }
+    </style>
+</head>
+<body>
+
+    <div id="ui">
+        <h1>✨ El Universo de May ✨</h1>
+        <p>Toca la pantalla para activar el sonido 🎵<br>Explora o busca una coordenada estelar 👇</p>
+    </div>
+
+    <div id="search-container">
+        <input type="text" id="coord-input" placeholder="Ej: 15.01.25">
+        <button id="search-btn" onclick="searchCoordinate()">Buscar</button>
+    </div>
+
+    <audio id="bg-music" loop hidden>
+        <source src="cancion.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="modal">
+        <h2 id="modal-title">Título</h2>
+        <p id="modal-text">Mensaje</p>
+        <span id="modal-coord"></span><br>
+        <button id="close-btn" onclick="document.getElementById('modal').style.display='none'">Cerrar</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <script>
+        // Activar música
+        window.addEventListener('click', function() {
+            const audio = document.getElementById('bg-music');
+            if (audio && audio.paused) {
+                audio.volume = 0.5;
+                audio.play().catch(e => console.log("Interacción necesaria para audio."));
+            }
+        }, { once: true });
+
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x030008, 0.0015);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+        camera.position.z = 180;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.2;
+
+        // Galaxia
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 10000;
+        const posArray = new Float32Array(particlesCount * 3);
+        const colorsArray = new Float32Array(particlesCount * 3);
+
+        for(let i = 0; i < particlesCount * 3; i+=3) {
+            const r = 350 * Math.cbrt(Math.random());
+            const theta = Math.random() * 2 * Math.PI;
+            const phi = Math.acos(2 * Math.random() - 1);
+            
+            posArray[i] = r * Math.sin(phi) * Math.cos(theta);
+            posArray[i+1] = r * Math.sin(phi) * Math.sin(theta);
+            posArray[i+2] = r * Math.cos(phi) * 0.6; 
+
+            colorsArray[i] = 0.4 + Math.random() * 0.6; 
+            colorsArray[i+1] = Math.random() * 0.3; 
+            colorsArray[i+2] = 0.6 + Math.random() * 0.4; 
+        }
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colorsArray, 3));
+
+        const particlesMaterial = new THREE.PointsMaterial({ size: 1.2, vertexColors: true, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending });
+        const particleMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particleMesh);
+
+        // Estrellas
+        const clickableObjects = [];
+        const starGeometry = new THREE.SphereGeometry(2.5, 16, 16);
+        const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const haloGeom = new THREE.SphereGeometry(5.5, 16, 16);
+        const haloMat = new THREE.MeshBasicMaterial({ color: 0xE0B0FF, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending });
+
+        const mainMemories = [
+            { title: "💜 15-01-25 💜", text: "El Big Bang de nuestro universo. Donde todo comenzó.", coord: "15.01.25" },
+            { title: "💌 Lara Jean", text: "«Dicen que si miras algo con suficiente atención, desaparece. Pero yo te miro y te vuelves más real.»", coord: "12.04.18" },
+            { title: "🌧️ Diario de una Pasión", text: "«El mejor tipo de amor es el que despierta el alma y nos hace aspirar a más.»", coord: "365.00.00" },
+            { title: "👣 A Dos Metros de Ti", text: "«Te amo tanto que solo quiero que estés a salvo, incluso si eso significa no estar cerca de ti.»", coord: "02.00.00" },
+            { title: "✨ Mi Favorita", text: "En este y en todos los universos, te elegiría a ti siempre.", coord: "99.99.99" }
+        ];
+
+        function addStar(title, text, isMain, coord) {
+            const star = new THREE.Mesh(starGeometry, starMaterial);
+            const spread = isMain ? 120 : 250;
+            star.position.set((Math.random() - 0.5) * spread, (Math.random() - 0.5) * spread, (Math.random() - 0.5) * spread);
+            star.userData = { title: title, text: text, coord: coord };
+            scene.add(star);
+            if(isMain) clickableObjects.push(star); 
+            
+            const halo = new THREE.Mesh(haloGeom, haloMat);
+            if (isMain) halo.scale.set(1.5, 1.5, 1.5);
+            star.add(halo);
+        }
+
+        mainMemories.forEach(mem => addStar(mem.title, mem.text, true, mem.coord));
+
+        for(let i = 0; i < 200; i++) {
+            addStar("✨", "Polvo de estrellas", false, null);
+        }
+
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        function openModal(data) {
+            controls.autoRotate = false; 
+            document.getElementById('modal-title').innerHTML = data.title;
+            document.getElementById('modal-text').innerHTML = data.text;
+            document.getElementById('modal-coord').innerHTML = "Coordenada estelar: " + data.coord;
+            document.getElementById('modal').style.display = 'block';
+        }
+
+        function checkIntersection(clientX, clientY) {
+            mouse.x = (clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+
+            const intersects = raycaster.intersectObjects(clickableObjects);
+            if (intersects.length > 0) {
+                openModal(intersects[0].object.userData);
+            }
+        }
+
+        window.addEventListener('click', (e) => {
+            if(e.target.id !== 'coord-input' && e.target.id !== 'search-btn' && e.target.id !== 'close-btn') {
+                checkIntersection(e.clientX, e.clientY);
+            }
+        });
+        window.addEventListener('touchstart', (e) => {
+            if(e.target.id !== 'coord-input' && e.target.id !== 'search-btn' && e.target.id !== 'close-btn') {
+                if(e.touches.length > 0) checkIntersection(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        });
+
+        window.searchCoordinate = function() {
+            const inputVal = document.getElementById('coord-input').value.trim();
+            if(!inputVal) return;
+            const starFound = clickableObjects.find(star => star.userData.coord === inputVal);
+            if(starFound) {
+                openModal(starFound.userData);
+                document.getElementById('coord-input').value = ""; 
+            } else {
+                alert("Coordenada '" + inputVal + "' no encontrada. Revisa tu mapa estelar.");
+            }
+        };
+
+        document.getElementById('coord-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') searchCoordinate();
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            particleMesh.rotation.y += 0.0005; 
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
