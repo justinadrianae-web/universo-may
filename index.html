@@ -4,13 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>El Universo de May 💜</title>
-    
-    <script>
-        window.onerror = function(msg, url, line) {
-            alert("Ocurrió un error en la línea " + line + ":\n" + msg);
-        };
-    </script>
-
     <style>
         body { margin: 0; overflow: hidden; background-color: #030008; font-family: 'Helvetica', sans-serif; }
         canvas { display: block; cursor: grab; }
@@ -58,7 +51,7 @@
 
     <div id="ui">
         <h1>✨ El Universo de May ✨</h1>
-        <p>Toca la pantalla para activar el sonido 🎵<br>Explora o busca una coordenada estelar 👇</p>
+        <p>Toca la pantalla para la música 🎵<br>Tienes 200 estrellas por descubrir 👇</p>
     </div>
 
     <div id="search-container">
@@ -81,12 +74,11 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     
     <script>
-        // Activar música
         window.addEventListener('click', function() {
             const audio = document.getElementById('bg-music');
-            if (audio && audio.paused) {
+            if (audio.paused) {
                 audio.volume = 0.5;
-                audio.play().catch(e => console.log("Interacción necesaria para audio."));
+                audio.play().catch(e => console.log("Esperando interacción..."));
             }
         }, { once: true });
 
@@ -98,7 +90,6 @@
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
         document.body.appendChild(renderer.domElement);
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -107,9 +98,9 @@
         controls.autoRotate = true;
         controls.autoRotateSpeed = 0.2;
 
-        // Galaxia
+        // 1. Galaxia Morada (Polvo estelar visual, no tocable)
         const particlesGeometry = new THREE.BufferGeometry();
-        const particlesCount = 10000;
+        const particlesCount = 12000;
         const posArray = new Float32Array(particlesCount * 3);
         const colorsArray = new Float32Array(particlesCount * 3);
 
@@ -128,45 +119,75 @@
         }
         particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
         particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colorsArray, 3));
-
-        const particlesMaterial = new THREE.PointsMaterial({ size: 1.2, vertexColors: true, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending });
-        const particleMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        const particleMesh = new THREE.Points(particlesGeometry, new THREE.PointsMaterial({ size: 1.2, vertexColors: true, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending }));
         scene.add(particleMesh);
 
-        // Estrellas
+        // 2. LAS 200 ESTRELLAS FUNCIONALES
         const clickableObjects = [];
-        const starGeometry = new THREE.SphereGeometry(2.5, 16, 16);
+        const starGeometry = new THREE.SphereGeometry(3, 16, 16);
         const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-        const haloGeom = new THREE.SphereGeometry(5.5, 16, 16);
-        const haloMat = new THREE.MeshBasicMaterial({ color: 0xE0B0FF, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending });
+        const haloGeom = new THREE.SphereGeometry(6.5, 16, 16);
+        const haloMat = new THREE.MeshBasicMaterial({ color: 0xE0B0FF, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending });
 
+        // A. Mensajes Principales (Coordenadas Exactas)
         const mainMemories = [
-            { title: "💜 15-01-25 💜", text: "El Big Bang de nuestro universo. Donde todo comenzó.", coord: "15.01.25" },
-            { title: "💌 Lara Jean", text: "«Dicen que si miras algo con suficiente atención, desaparece. Pero yo te miro y te vuelves más real.»", coord: "12.04.18" },
-            { title: "🌧️ Diario de una Pasión", text: "«El mejor tipo de amor es el que despierta el alma y nos hace aspirar a más.»", coord: "365.00.00" },
-            { title: "👣 A Dos Metros de Ti", text: "«Te amo tanto que solo quiero que estés a salvo, incluso si eso significa no estar cerca de ti.»", coord: "02.00.00" },
-            { title: "✨ Mi Favorita", text: "En este y en todos los universos, te elegiría a ti siempre.", coord: "99.99.99" }
+            { t: "💜 15-01-25 💜", m: "El día en que nuestro universo comenzó a escribirse.", c: "15.01.25" },
+            { t: "💌 Lara Jean", m: "«Dicen que si miras algo con suficiente atención, desaparece. Pero yo te miro y te vuelves más real.»", c: "12.04.18" },
+            { t: "🌧️ Diario de una Pasión", m: "«No será fácil, será muy difícil. Y tendremos que trabajar en esto cada día, pero quiero hacerlo porque te quiero a ti.»", c: "365.00.00" },
+            { t: "👣 A Dos Metros de Ti", m: "«Te amo tanto que solo quiero que estés a salvo, incluso si eso significa no estar cerca de ti.»", c: "02.00.00" },
+            { t: "✨ Mi Favorita", m: "En este y en todos los universos, te elegiría a ti siempre.", c: "99.99.99" }
         ];
 
-        function addStar(title, text, isMain, coord) {
+        // B. Frases Profundas (Para las 195 estrellas restantes)
+        const frasesProfundas = [
+            "Eres mi casualidad favorita en este universo lleno de caos.",
+            "Si tuviera que vivir mi vida de nuevo, te encontraría antes para amarte más tiempo.",
+            "Contigo, hasta el silencio es cómodo y el caos tiene sentido.",
+            "Eres la mejor parte de todos mis días.",
+            "Me haces sentir que todo lo bonito del mundo me está pasando a mí.",
+            "Te miro y sé que estoy exactamente donde debo estar.",
+            "Mi lugar favorito para estar es dentro de tus abrazos.",
+            "Haces que mi mundo sea más brillante solo con existir en él.",
+            "Elegirte fue la decisión más fácil y hermosa que he tomado.",
+            "Si el amor fuera una canción, sonaría exactamente como tú.",
+            "No necesito buscar magia en el cielo cuando te tengo a ti.",
+            "Eres mi pensamiento favorito antes de dormir y al despertar.",
+            "Me encanta la versión de mí mismo cuando estoy contigo.",
+            "Eres mi paz en medio de la tormenta y mi tormenta favorita.",
+            "Cada latido de mi corazón pronuncia tu nombre."
+        ];
+
+        // Crear las 200 estrellas
+        for(let i = 0; i < 200; i++) {
             const star = new THREE.Mesh(starGeometry, starMaterial);
-            const spread = isMain ? 120 : 250;
+            const spread = 200;
             star.position.set((Math.random() - 0.5) * spread, (Math.random() - 0.5) * spread, (Math.random() - 0.5) * spread);
-            star.userData = { title: title, text: text, coord: coord };
+            
+            let data;
+            let haloScale = 1;
+
+            if(i < mainMemories.length) {
+                // Las principales
+                data = { title: mainMemories[i].t, text: mainMemories[i].m, coord: mainMemories[i].c };
+                star.scale.set(1.5, 1.5, 1.5);
+                haloScale = 1.5;
+            } else {
+                // Las de exploración
+                let frase = frasesProfundas[Math.floor(Math.random() * frasesProfundas.length)];
+                let coordSec = "88." + Math.floor(Math.random() * 90 + 10) + "." + i;
+                data = { title: "✨ Un pensamiento", text: frase, coord: coordSec };
+            }
+
+            star.userData = data;
             scene.add(star);
-            if(isMain) clickableObjects.push(star); 
+            clickableObjects.push(star); // AHORA TODAS SON TOCABLES
             
             const halo = new THREE.Mesh(haloGeom, haloMat);
-            if (isMain) halo.scale.set(1.5, 1.5, 1.5);
+            halo.scale.set(haloScale, haloScale, haloScale);
             star.add(halo);
         }
 
-        mainMemories.forEach(mem => addStar(mem.title, mem.text, true, mem.coord));
-
-        for(let i = 0; i < 200; i++) {
-            addStar("✨", "Polvo de estrellas", false, null);
-        }
-
+        // Sistema de Clicks y Búsqueda
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
 
@@ -174,7 +195,7 @@
             controls.autoRotate = false; 
             document.getElementById('modal-title').innerHTML = data.title;
             document.getElementById('modal-text').innerHTML = data.text;
-            document.getElementById('modal-coord').innerHTML = "Coordenada estelar: " + data.coord;
+            document.getElementById('modal-coord').innerHTML = "Coordenada: " + data.coord;
             document.getElementById('modal').style.display = 'block';
         }
 
@@ -208,7 +229,7 @@
                 openModal(starFound.userData);
                 document.getElementById('coord-input').value = ""; 
             } else {
-                alert("Coordenada '" + inputVal + "' no encontrada. Revisa tu mapa estelar.");
+                alert("Coordenada '" + inputVal + "' no encontrada. Intenta otra vez.");
             }
         };
 
